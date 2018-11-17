@@ -10,6 +10,7 @@
 #include "mystery_event_menu.h"
 #include "naming_screen.h"
 #include "option_menu.h"
+#include "nuzlocke.h"
 #include "palette.h"
 #include "pokeball.h"
 #include "overworld.h"
@@ -414,6 +415,8 @@ void Task_MainMenuDraw(u8 taskId)
             PrintMainMenuItem(gMainMenuString_NewGame, 2, 1);
             Menu_DrawStdWindowFrame(1, 4, 28, 7);
             PrintMainMenuItem(gMainMenuString_Option, 2, 5);
+            Menu_DrawStdWindowFrame(1, 8, 28, 11);
+            PrintMainMenuItem(gMainMenuString_NuzlockeRules, 2, 9);
             break;
         case HAS_SAVED_GAME:
             Menu_DrawStdWindowFrame(1, 0, 28, 7);
@@ -422,6 +425,8 @@ void Task_MainMenuDraw(u8 taskId)
             PrintMainMenuItem(gMainMenuString_NewGame, 2, 9);
             Menu_DrawStdWindowFrame(1, 12, 28, 15);
             PrintMainMenuItem(gMainMenuString_Option, 2, 13);
+            Menu_DrawStdWindowFrame(1, 16, 28, 19);
+            PrintMainMenuItem(gMainMenuString_NuzlockeRules, 2, 17);
             PrintSaveFileInfo();
             break;
         case HAS_MYSTERY_GIFT:
@@ -432,7 +437,7 @@ void Task_MainMenuDraw(u8 taskId)
             Menu_DrawStdWindowFrame(1, 12, 28, 15);
             PrintMainMenuItem(gMainMenuString_MysteryEvents, 2, 13);
             Menu_DrawStdWindowFrame(1, 16, 28, 19);
-            PrintMainMenuItem(gMainMenuString_Option, 2, 0x11);
+            PrintMainMenuItem(gMainMenuString_Option, 2, 17);
             PrintSaveFileInfo();
             break;
         }
@@ -471,10 +476,10 @@ bool8 MainMenuProcessKeyInput(u8 taskId)
         {
         case HAS_NO_SAVED_GAME:
         default:
-            menuItemCount = 2;
+            menuItemCount = 3;
             break;
         case HAS_SAVED_GAME:
-            menuItemCount = 3;
+            menuItemCount = 4;
             break;
         case HAS_MYSTERY_GIFT:
             menuItemCount = 4;
@@ -517,6 +522,7 @@ void Task_MainMenuPressedA(u8 taskId)
         CONTINUE,
         OPTION,
         MYSTERY_EVENTS,
+        NUZLOCKE
     } action;
 
     if (gPaletteFade.active)
@@ -535,6 +541,9 @@ void Task_MainMenuPressedA(u8 taskId)
         case 1:
             action = OPTION;
             break;
+        case 2:
+            action = NUZLOCKE;
+            break;
         }
         break;
     case HAS_SAVED_GAME:
@@ -549,6 +558,9 @@ void Task_MainMenuPressedA(u8 taskId)
             break;
         case 2:
             action = OPTION;
+            break;
+        case 3:
+            action = NUZLOCKE;
             break;
         }
         break;
@@ -595,6 +607,12 @@ void Task_MainMenuPressedA(u8 taskId)
         SetMainCallback2(CB2_InitMysteryEventMenu);
         DestroyTask(taskId);
         break;
+    case NUZLOCKE:
+        // TODO: IMPLEMENT TASK FOR NUZLOCKE SETTINGS!
+        gMain.savedCallback = CB2_InitMainMenuFromOptions;
+        SetMainCallback2(CB2_InitNuzlockeMenu);
+        DestroyTask(taskId);
+        break;
     }
 }
 
@@ -627,6 +645,8 @@ void HighlightCurrentMenuItem(u8 layout, u8 menuItem)
         case 1:
             REG_WIN0V = WIN_RANGE(33, 63);
             break;
+        case 2:
+            REG_WIN0V = WIN_RANGE(65, 95);
         }
         break;
     case HAS_SAVED_GAME:
@@ -641,6 +661,9 @@ void HighlightCurrentMenuItem(u8 layout, u8 menuItem)
             break;
         case 2:
             REG_WIN0V = WIN_RANGE(97, 127);
+            break;
+        case 3:
+            REG_WIN0V = WIN_RANGE(129, 159);
             break;
         }
         break;

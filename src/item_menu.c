@@ -36,6 +36,7 @@
 #include "scanline_effect.h"
 #include "menu_helpers.h"
 #include "ewram.h"
+#include "nuzlocke.h"
 
 // External stuff
 extern void FreeAndReserveObjectSpritePalettes(void);
@@ -2693,6 +2694,13 @@ static void DisplayCannotBeHeldMessage(u8 taskId)
 static void HandlePopupMenuAction_Give(u8 taskId)
 {
     PlaySE(SE_SELECT);
+
+    if (Nuzlocke_AreHeldItemsAllowed() == FALSE)
+    {
+        DisplayCannotBeHeldMessage(taskId);
+        return;
+    }
+
     if (sub_80F931C(gSpecialVar_ItemId) == 0)
     {
         sub_80A73FC();
@@ -3273,6 +3281,20 @@ static void OnBagClose_Battle(u8 taskId)
 
 static void HandlePopupMenuAction_UseInBattle(u8 taskId)
 {
+    // limit using items if nuzlocke rules are in effect
+    if (Nuzlocke_AreItemsAllowedMidBattle() == FALSE && sCurrentBagPocket != BAG_POCKET_POKE_BALLS)
+    {
+        ItemUseOutOfBattle_CannotUse(taskId);
+        return;
+    }
+
+    // limit capturing pokemons if nuzlocke rules are in effect
+    if (Nuzlocke_CanCaptureOn(&gMapHeader) == FALSE && sCurrentBagPocket == BAG_POCKET_POKE_BALLS)
+    {
+        ItemUseOutOfBattle_CannotUse(taskId);
+        return;
+    }
+
     if (ItemId_GetBattleFunc(gSpecialVar_ItemId) != NULL)
     {
         PlaySE(SE_SELECT);

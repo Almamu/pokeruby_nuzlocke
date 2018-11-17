@@ -19,6 +19,7 @@
 #include "task.h"
 #include "text.h"
 #include "ewram.h"
+#include "nuzlocke.h"
 
 extern u8 gPlayerPartyCount;
 extern u8 gLastFieldPokeMenuOpened;
@@ -833,6 +834,11 @@ static void Task_DaycareStorageMenu8122EAC(u8 taskId)
 {
     if (!gPaletteFade.active)
     {
+        if (Nuzlocke_IsDaycareAllowed() == 0)
+        {
+            DaycareStorageMenuCallback_Exit(taskId);
+            return;
+        }
         if (gMain.newAndRepeatedKeys & 0x40)
         {
             if (Menu_GetCursorPos() != 0)

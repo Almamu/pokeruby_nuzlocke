@@ -43,6 +43,8 @@
 #include "string_util.h"
 #include "tv.h"
 #include "constants/maps.h"
+#include "nuzlocke.h"
+#include "constants/field_effects.h"
 
 typedef u16 (*SpecialFunc)(void);
 typedef void (*NativeFunc)(void);
@@ -1545,6 +1547,8 @@ bool8 ScrCmd_vbufferstring(struct ScriptContext *ctx)
     return FALSE;
 }
 
+extern void ChangePokemonNickname(void);
+
 bool8 ScrCmd_givemon(struct ScriptContext *ctx)
 {
     u16 species = VarGet(ScriptReadHalfword(ctx));
@@ -1555,6 +1559,7 @@ bool8 ScrCmd_givemon(struct ScriptContext *ctx)
     u8 unkParam3 = ScriptReadByte(ctx);
 
     gSpecialVar_Result = ScriptGiveMon(species, level, item, unkParam1, unkParam2, unkParam3);
+    ChangePokemonNickname();
     return FALSE;
 }
 
@@ -1839,6 +1844,19 @@ bool8 ScrCmd_contestlinktransfer(struct ScriptContext *ctx)
 bool8 ScrCmd_dofieldeffect(struct ScriptContext *ctx)
 {
     u16 effectId = VarGet(ScriptReadHalfword(ctx));
+
+    if (effectId == FLDEFF_POKECENTER_HEAL && Nuzlocke_ArePokemonCentersAllowed() == FALSE)
+    {
+        // this is only called when a nurse is going to heal you
+        // or similars
+        // ShowFieldMessage(gSystemText_NuzlockeRuleBlocks);
+        // ScrCmd_waitmessage(ctx);
+        // ScrCmd_waitbuttonpress(ctx);
+        ScrCmd_closemessage(ctx);
+        ScrCmd_faceplayer(ctx);
+        ScrCmd_end(ctx);
+        return TRUE;
+    }
 
     sFieldEffectScriptId = effectId;
     FieldEffectStart(sFieldEffectScriptId);

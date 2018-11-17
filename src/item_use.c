@@ -38,6 +38,7 @@
 #include "constants/map_types.h"
 #include "constants/species.h"
 #include "constants/vars.h"
+#include "nuzlocke.h"
 
 extern void (*gFieldItemUseCallback)(u8);
 extern void (*gFieldCallback)(void);
@@ -1057,6 +1058,12 @@ void ItemUseInBattle_StatIncrease(u8 taskId)
 
     Menu_EraseWindowRect(0, 13, 13, 20);
 
+    if (Nuzlocke_AreItemsAllowedMidBattle() == FALSE)
+    {
+        DisplayItemMessageOnField(taskId, gOtherText_WontHaveAnyEffect, CleanUpItemMenuMessage, 1);
+        return;
+    }
+
     if (ExecuteTableBasedItemEffect_(&gPlayerParty[partyId], gSpecialVar_ItemId, partyId, 0) != FALSE)
     {
         DisplayItemMessageOnField(taskId, gOtherText_WontHaveAnyEffect, CleanUpItemMenuMessage, 1);
@@ -1084,10 +1091,16 @@ void sub_80CA3C0(u8 taskId)
     BeginNormalPaletteFade(0xFFFFFFFF, 0, 0, 16, RGB(0, 0, 0));
 }
 
-void ItemUseInBattle_Medicine(u8 var)
+void ItemUseInBattle_Medicine(u8 taskId)
 {
+    if (Nuzlocke_AreItemsAllowedMidBattle() == FALSE)
+    {
+        DisplayDadsAdviceCannotUseItemMessage(taskId, gTasks[taskId].data[2]);
+        return;
+    }
+
     gPokemonItemUseCallback = UseMedicine;
-    sub_80CA3C0(var);
+    sub_80CA3C0(taskId);
 }
 
 void unref_sub_80CA410(u8 var)
@@ -1096,10 +1109,16 @@ void unref_sub_80CA410(u8 var)
     sub_80CA3C0(var);
 }
 
-void ItemUseInBattle_PPRecovery(u8 var)
+void ItemUseInBattle_PPRecovery(u8 taskId)
 {
+    if (Nuzlocke_AreItemsAllowedMidBattle() == FALSE)
+    {
+        DisplayDadsAdviceCannotUseItemMessage(taskId, gTasks[taskId].data[2]);
+        return;
+    }
+
     gPokemonItemUseCallback = DoPPRecoveryItemEffect;
-    sub_80CA3C0(var);
+    sub_80CA3C0(taskId);
 }
 
 void unref_sub_80CA448(u8 var)
@@ -1122,6 +1141,12 @@ void unref_sub_80CA448(u8 var)
 void ItemUseInBattle_Escape(u8 taskId)
 {
     Menu_EraseWindowRect(0, 13, 13, 20);
+    
+    if (Nuzlocke_AreItemsAllowedMidBattle() == FALSE)
+    {
+        DisplayDadsAdviceCannotUseItemMessage(taskId, gTasks[taskId].data[2]);
+        return;
+    }
 
     if ((gBattleTypeFlags & BATTLE_TYPE_TRAINER) == FALSE)
     {
@@ -1179,6 +1204,12 @@ void ItemUseOutOfBattle_EnigmaBerry(u8 taskId)
 
 void ItemUseInBattle_EnigmaBerry(u8 taskId)
 {
+    if (Nuzlocke_AreItemsAllowedMidBattle() == FALSE)
+    {
+        ItemUseOutOfBattle_CannotUse(taskId);
+        return;
+    }
+
     switch (GetItemEffectType(gSpecialVar_ItemId))
     {
     case 0:

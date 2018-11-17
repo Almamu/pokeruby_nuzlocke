@@ -25,6 +25,7 @@ extern const u8 gMainMenuString_NewGame[];
 extern const u8 gMainMenuString_Continue[];
 extern const u8 gMainMenuString_Option[];
 extern const u8 gMainMenuString_MysteryEvents[];
+extern const u8 gMainMenuString_NuzlockeRules[];
 
 // system text 2
 extern const u8 SystemText_UpdatingSaveExternal[];

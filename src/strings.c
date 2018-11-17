@@ -27,6 +27,7 @@ const u8 gMainMenuString_NewGame[] = _("NEW GAME");
 const u8 gMainMenuString_Continue[] = _("CONTINUE");
 const u8 gMainMenuString_Option[] = _("OPTION");
 const u8 gMainMenuString_MysteryEvents[] = _("MYSTERY EVENTS");
+const u8 gMainMenuString_NuzlockeRules[] = _("NUZLOCKE SETTINGS");
 
 // system text 2
 const u8 SystemText_UpdatingSaveExternal[] = _("Updating save file using external\ndata. Please wait.");

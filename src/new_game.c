@@ -30,6 +30,7 @@
 #include "secret_base.h"
 #include "text.h"
 #include "tv.h"
+#include "nuzlocke.h"
 
 EWRAM_DATA u8 gDifferentSaveFile = 0;
 EWRAM_DATA u8 gUnknown_020297ED = 0;
@@ -164,6 +165,7 @@ void NewGameInitData(void)
         RtcReset();
 
     gDifferentSaveFile = 1;
+    Nuzlocke_DefaultData();
     ZeroPlayerPartyMons();
     ZeroEnemyPartyMons();
     ResetPokedex();

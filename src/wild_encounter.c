@@ -15,6 +15,8 @@
 #include "script.h"
 #include "constants/species.h"
 #include "tv.h"
+#include "nuzlocke.h"
+#include "data2.h"
 
 const struct WildPokemon PetalburgCity_WaterMons [] =
 {
@@ -3982,6 +3984,20 @@ static void CreateWildMon(u16 species, u8 b)
 {
     ZeroEnemyPartyMons();
     CreateMonWithNature(&gEnemyParty[0], species, b, 0x20, PickWildMonNature());
+
+    if (Nuzlocke_AreWildAttacksRandomized() == TRUE)
+    {
+        u16 species = GetMonData(&gEnemyParty[0], MON_DATA_SPECIES);
+        u8 j = 0;
+
+        for(j = 0; j < 4; j ++)
+        {
+            u16 move = Nuzlocke_RandomAttack(species, Random(), b);
+
+            SetMonData(&gEnemyParty[0], MON_DATA_MOVE1 + j, &move);
+            SetMonData(&gEnemyParty[0], MON_DATA_PP1 + j, &gBattleMoves[move].pp);
+        }
+    }
 }
 
 static bool8 GenerateWildMon(const struct WildPokemonInfo *wildMonInfo, u8 area, bool8 checkRepel)
@@ -4006,7 +4022,22 @@ static bool8 GenerateWildMon(const struct WildPokemonInfo *wildMonInfo, u8 area,
         return FALSE;
     else
     {
-        CreateWildMon(wildMonInfo->wildPokemon[wildMonIndex].species, level);
+        if (Nuzlocke_AreWildMonsRandomized() == TRUE)
+        {
+            CreateWildMon(
+                Nuzlocke_RandomSpecies(
+                    wildMonInfo->wildPokemon[wildMonIndex].species,
+                    wildMonIndex,
+                    &gMapHeader
+                ),
+                level
+            );
+        }
+        else
+        {
+            CreateWildMon(wildMonInfo->wildPokemon[wildMonIndex].species, level);
+        }
+
         return TRUE;
     }
 }
@@ -4016,7 +4047,21 @@ static u16 GenerateFishingWildMon(const struct WildPokemonInfo *wildMonInfo, u8 
     u8 wildMonIndex = ChooseWildMonIndex_Fishing(rod);
     u8 level = ChooseWildMonLevel(&wildMonInfo->wildPokemon[wildMonIndex]);
 
-    CreateWildMon(wildMonInfo->wildPokemon[wildMonIndex].species, level);
+    if (Nuzlocke_AreWildMonsRandomized() == TRUE)
+    {
+        CreateWildMon(
+            Nuzlocke_RandomSpecies(
+                wildMonInfo->wildPokemon[wildMonIndex].species,
+                wildMonIndex,
+                &gMapHeader
+            ),
+            level
+        );
+    }
+    else
+    {
+        CreateWildMon(wildMonInfo->wildPokemon[wildMonIndex].species, level);
+    }
     return wildMonInfo->wildPokemon[wildMonIndex].species;
 }
 

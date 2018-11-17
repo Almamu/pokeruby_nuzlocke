@@ -23,6 +23,7 @@
 #include "text_window.h"
 #include "trig.h"
 #include "trade.h"
+#include "nuzlocke.h"
 
 extern struct SpriteTemplate gUnknown_02024E8C;
 
@@ -534,11 +535,28 @@ static void CB2_EggHatch_1(void)
         if (IsFanfareTaskInactive())
             gEggHatchData->CB2_state++;
         break;
-    case 7:
-        GetMonNick(&gPlayerParty[gEggHatchData->eggPartyID], gStringVar1);
-        StringExpandPlaceholders(gStringVar4, gOtherText_NickHatchPrompt);
-        EggHatchPrintMessage1(gStringVar4);
-        gEggHatchData->CB2_state++;
+    case 7:    
+        if (Nuzlocke_IsForcedToNickname() == TRUE)
+        {
+            u16 species;
+            u8 gender;
+            u32 personality;
+
+            GetMonNick(&gPlayerParty[gEggHatchData->eggPartyID], gStringVar3);
+            species = GetMonData(&gPlayerParty[gEggHatchData->eggPartyID], MON_DATA_SPECIES);
+            gender = GetMonGender(&gPlayerParty[gEggHatchData->eggPartyID]);
+            personality = GetMonData(&gPlayerParty[gEggHatchData->eggPartyID], MON_DATA_PERSONALITY, 0);
+            DoNamingScreen(3, gStringVar3, species, gender, personality, EggHatchSetMonNickname);
+
+            gEggHatchData->CB2_state = 10;
+        }
+        else
+        {
+            GetMonNick(&gPlayerParty[gEggHatchData->eggPartyID], gStringVar1);
+            StringExpandPlaceholders(gStringVar4, gOtherText_NickHatchPrompt);
+            EggHatchPrintMessage1(gStringVar4);
+            gEggHatchData->CB2_state++;
+        }
         break;
     case 8:
         if (EggHatchUpdateWindowText())

@@ -18,6 +18,8 @@
 #define INCBIN_S32 {0}
 #endif
 
+#define NUZLOCKE_SITUATION_DATA 0x15
+
 // Prevent cross-jump optimization.
 #define BLOCK_CROSS_JUMP asm("");
 
@@ -816,31 +818,58 @@ struct BattleTowerData
     /*0x04CA, 0x0572*/ u16 bestBattleTowerWinStreak;
     /*0x04CC, 0x0574*/ u16 currentWinStreaks[2];
     /*0x04D0, 0x0578*/ u8 lastStreakLevelType; // 0 = level 50, 1 = level 100.  level type of the last streak. Used by tv to report the level mode.
-    /*0x04D1, 0x0579*/ u8 filler_4D1[0x317];
+    /*0x04D1, 0x0579*/ // u8 filler_4D1[0x317]; // moved to SaveBlock2 to use on the nuzlocke settings
+};
+
+struct NuzlockeData
+{
+    u8 version:4; // version of the settings being used
+    u8 pokemonDie:1; // pokemon are dead after their hp gets to 0 (no revives, no pokemon center)
+    u8 itemsInBattle:1; // prevents the player from using items in battle
+    u8 pokemonCenters:1; // disables the pokemon centers
+    u8 hardGameOver:1; // if the player blacks out, it's game over
+    u8 mustNickname:1; // the player must assign nicknames to pokemons
+    u8 levelBalance:1; // the enemy team's level is balanced to the player's
+    u8 noBuying:1; // disables the pokemarts, forbidding the user to buy items
+    u8 noDayCare:1; // disables daycare
+    u8 noExpShare:1; // disables the effects of exp share
+    u8 noHeldItems:1; // disables the use of held items
+    u8 oneCapturePerMap:2; // limits the number of pokemons to be captured to one by map
+    u16 specificStarter; // random starters for the player based on it's trainer ID, If the last number is 1-3 the player starts with a Grass type, 4-6 is Fire type, 7-9 is Water type, 0 is the player's choice. Alternatively, use the Trainer ID modulo 3 for the same purposes.
+    u8 capturedZones[NUZLOCKE_SITUATION_DATA]; // list of zones where pokemon has been captured
+    u8 wildRandom:1;
+    u8 trainersRandom:1;
+    u8 wildAttacksRandom:1;
+    u8 trainerAttacksRandom:1;
+    u8 gendersRandom:1;
+    u8 pad:3;
+    u16 randomSeed;
+    u8 filler_4D1[0x2FB];
 };
 
 struct SaveBlock2 /* 0x02024EA4 */
 {
-    /*0x00*/ u8 playerName[8];
-    /*0x08*/ u8 playerGender; // MALE, FEMALE
-    /*0x09*/ u8 specialSaveWarp;
-    /*0x0A*/ u8 playerTrainerId[4];
-    /*0x0E*/ u16 playTimeHours;
-    /*0x10*/ u8 playTimeMinutes;
-    /*0x11*/ u8 playTimeSeconds;
-    /*0x12*/ u8 playTimeVBlanks;
-    /*0x13*/ u8 optionsButtonMode;         // OPTIONS_BUTTON_MODE_[NORMAL/LR/L_EQUALS_A]
-    /*0x14*/ u16 optionsTextSpeed:3;       // OPTIONS_TEXT_SPEED_[SLOW/MID/FAST]
-             u16 optionsWindowFrameType:5; // Specifies one of the 20 decorative borders for text boxes
-             u16 optionsSound:1;           // OPTIONS_SOUND_[MONO/STEREO]
-             u16 optionsBattleStyle:1;     // OPTIONS_BATTLE_STYLE_[SHIFT/SET]
-             u16 optionsBattleSceneOff:1;  // whether battle animations are disabled
-             u16 regionMapZoom:1;          // whether the map is zoomed in
-    /*0x18*/ struct Pokedex pokedex;
-    /*0x90*/ u8 filler_90[0x8];
-    /*0x98*/ struct Time localTimeOffset;
-    /*0xA0*/ struct Time lastBerryTreeUpdate;
-    /*0xA8*/ struct BattleTowerData battleTower;
+    /*0x0000*/ u8 playerName[8];
+    /*0x0008*/ u8 playerGender; // MALE, FEMALE
+    /*0x0009*/ u8 specialSaveWarp;
+    /*0x000A*/ u8 playerTrainerId[4];
+    /*0x000E*/ u16 playTimeHours;
+    /*0x0010*/ u8 playTimeMinutes;
+    /*0x0011*/ u8 playTimeSeconds;
+    /*0x0012*/ u8 playTimeVBlanks;
+    /*0x0013*/ u8 optionsButtonMode;         // OPTIONS_BUTTON_MODE_[NORMAL/LR/L_EQUALS_A]
+    /*0x0014*/ u16 optionsTextSpeed:3;       // OPTIONS_TEXT_SPEED_[SLOW/MID/FAST]
+               u16 optionsWindowFrameType:5; // Specifies one of the 20 decorative borders for text boxes
+               u16 optionsSound:1;           // OPTIONS_SOUND_[MONO/STEREO]
+               u16 optionsBattleStyle:1;     // OPTIONS_BATTLE_STYLE_[SHIFT/SET]
+               u16 optionsBattleSceneOff:1;  // whether battle animations are disabled
+               u16 regionMapZoom:1;          // whether the map is zoomed in
+    /*0x0018*/ struct Pokedex pokedex;
+    /*0x0090*/ u8 filler_90[0x8];
+    /*0x0098*/ struct Time localTimeOffset;
+    /*0x00A0*/ struct Time lastBerryTreeUpdate;
+    /*0x00A8*/ struct BattleTowerData battleTower;
+    /*0x0579*/ struct NuzlockeData nuzlockeData;
 };
 
 struct MapPosition

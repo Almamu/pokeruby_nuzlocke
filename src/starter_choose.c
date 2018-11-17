@@ -15,6 +15,7 @@
 #include "task.h"
 #include "trig.h"
 #include "scanline_effect.h"
+#include "nuzlocke.h"
 
 extern u16 gSpecialVar_Result;
 extern struct SpriteTemplate gUnknown_02024E8C;
@@ -240,6 +241,9 @@ static u8 CreatePokemonFrontSprite(u16, u8, u8);
 //Retrieves one of the available starter Pokemon
 u16 GetStarterPokemon(u16 n)
 {
+    if (Nuzlocke_SpecificStarter())
+        return Nuzlocke_GetStarterMon(n);
+    
     if (n > 3)
         n = 0;
     return sStarterMons[n];

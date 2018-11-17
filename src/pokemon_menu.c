@@ -33,6 +33,7 @@
 #include "constants/field_effects.h"
 #include "constants/moves.h"
 #include "constants/songs.h"
+#include "nuzlocke.h"
 
 /*
 Pokemon menu:
@@ -591,6 +592,16 @@ static void sub_808A604(u8 taskID)
 
 static void PokemonMenu_GiveItem(u8 taskID)
 {
+    if (Nuzlocke_AreHeldItemsAllowed() == FALSE)
+    {
+        Menu_DestroyCursor();
+        Menu_EraseWindowRect(19, 0, 29, 19);
+        sub_806D5A4();
+        sub_806E834(gOtherText_WontHaveAnyEffect, 1);
+        gTasks[taskID].func = sub_808AAF0;
+        return;
+    }
+
     gUnknown_0202E8F5 = sub_806CA38(taskID);
     BeginNormalPaletteFade(0xFFFFFFFF, 0, 0, 16, RGB(0, 0, 0));
     gTasks[taskID].func = sub_808A604;

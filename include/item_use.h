@@ -45,5 +45,6 @@ void ItemUseOutOfBattle_EnigmaBerry(u8);
 void ItemUseInBattle_EnigmaBerry(u8);
 void ItemUseOutOfBattle_CannotUse(u8);
 u8 CheckIfItemIsTMHMOrEvolutionStone(u16 itemId);
+void ItemUseOutOfBattle_CannotUse(u8 taskId);
 
 #endif // GUARD_ITEM_USE_H

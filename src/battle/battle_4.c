@@ -26,6 +26,7 @@
 #include "naming_screen.h"
 #include "ewram.h"
 #include "util.h"
+#include "nuzlocke.h"
 
 // TODO: put this into battle_controllers.h
 
@@ -5413,7 +5414,7 @@ static void atk23_getexp(void)
                 else
                     holdEffect = ItemId_GetHoldEffect(item);
 
-                if (holdEffect == HOLD_EFFECT_EXP_SHARE)
+                if (holdEffect == HOLD_EFFECT_EXP_SHARE && Nuzlocke_IsExpShareAllowed() == TRUE)
                     viaExpShare++;
             }
 
@@ -5452,7 +5453,7 @@ static void atk23_getexp(void)
             else
                 holdEffect = ItemId_GetHoldEffect(item);
 
-            if (holdEffect != HOLD_EFFECT_EXP_SHARE && !(gBattleStruct->sentInPokes & 1))
+            if (((holdEffect == HOLD_EFFECT_EXP_SHARE && Nuzlocke_IsExpShareAllowed() == FALSE) || holdEffect != HOLD_EFFECT_EXP_SHARE) && !(gBattleStruct->sentInPokes & 1))
             {
                 gBattleStruct->sentInPokes >>= 1;
                 gBattleStruct->getexpStateTracker = 5;
@@ -15856,10 +15857,18 @@ static void atkF3_trygivecaughtmonnick(void)
     switch (gBattleCommunication[0])
     {
     case 0:
-        sub_8023A80();
-        gBattleCommunication[0]++;
-        gBattleCommunication[1] = 0;
-        sub_802BC6C();
+        if (Nuzlocke_IsForcedToNickname() == TRUE)
+        {
+            gBattleCommunication[1] = 0;
+            gBattleCommunication[0] = 2;
+        }
+        else
+        {
+            sub_8023A80();
+            gBattleCommunication[0]++;
+            gBattleCommunication[1] = 0;
+            sub_802BC6C();
+        }
         break;
     case 1:
         if (gMain.newKeys & DPAD_UP && gBattleCommunication[1] != 0)

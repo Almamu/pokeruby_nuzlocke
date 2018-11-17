@@ -379,6 +379,7 @@ SECTIONS {
         src/debug/unknown_debug_menu.o(.text);
         src/name_string_util.o(.text);
         src/menu_cursor.o(.text);
+        src/nuzlocke.o(.text);
     } =0
 
     script_data :
@@ -764,6 +765,9 @@ SECTIONS {
         data/debug_mystery_event_scripts.o(.rodata);
         src/libs/m4a_tables.o(.rodata);
         data/sound_data.o(.rodata);
+        src/nuzlocke.o(.rodata);
+        data/nuzlocke.o(.rodata);
+        src/nuzlocke.o(.data);
     } =0
 
     song_data :

@@ -49,6 +49,7 @@
 #include "constants/maps.h"
 #include "constants/songs.h"
 #include "constants/species.h"
+#include "nuzlocke.h"
 
 #ifdef SAPPHIRE
 #define LEGENDARY_MUSIC MUS_OOAME  // Heavy Rain
@@ -1315,6 +1316,12 @@ void CB2_WhiteOut(void)
 {
     u8 val;
     gMain.state++;
+    if (Nuzlocke_IsBlackoutAllowed() == FALSE)
+    {
+        DoSoftReset();
+        return;
+    }
+
     if (gMain.state >= 120)
     {
         FieldClearVBlankHBlankCallbacks();

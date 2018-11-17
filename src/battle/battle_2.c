@@ -47,6 +47,7 @@
 #include "scanline_effect.h"
 #include "util.h"
 #include "ewram.h"
+#include "nuzlocke.h"
 
 struct UnknownStruct7
 {
@@ -207,6 +208,7 @@ void sub_800E7C4(void)
 void InitBattle(void)
 {
     s32 i;
+    bool8 whiteout = TRUE;
 
     SetHBlankCallback(NULL);
     SetVBlankCallback(NULL);
@@ -282,6 +284,20 @@ void InitBattle(void)
     for (i = 0; i < PARTY_SIZE; i++)
         AdjustFriendship(&gPlayerParty[i], FRIENDSHIP_EVENT_LEAGUE_BATTLE);
     gBattleCommunication[0] = 0;
+
+    // whiteout if we do not have pokemons alive
+    for (i = 0; i < PARTY_SIZE; i ++)
+    {
+        if (GetMonData(&gPlayerParty[i], MON_DATA_HP) != 0)
+        {
+            whiteout = FALSE;
+        }
+    }
+
+    if (whiteout)
+    {
+        SetMainCallback2(CB2_WhiteOut);
+    }
 }
 
 void sub_800E9EC(void)
@@ -1028,6 +1044,9 @@ u8 CreateNPCTrainerParty(struct Pokemon *party, u16 trainerNum)
 {
     u32 nameHash = 0;
     s32 i;
+    u8 pokemonCount = 0;
+    u16 medianLevel = 0;
+    u8 highestLevel = 0;
 
     if (trainerNum == 0x400)
         return 0;
@@ -1035,6 +1054,25 @@ u8 CreateNPCTrainerParty(struct Pokemon *party, u16 trainerNum)
     if ((gBattleTypeFlags & 0x908) == 8)
     {
         ZeroEnemyPartyMons();
+
+        if (Nuzlocke_ShouldBalanceLevels() == TRUE)
+        {
+            for (i = 0; i < PARTY_SIZE; i ++)
+            {
+                if (GetMonData(&gPlayerParty[i], MON_DATA_SPECIES) == SPECIES_NONE) continue;
+
+                pokemonCount ++;
+                medianLevel += GetMonData(&gPlayerParty[i], MON_DATA_LEVEL, 0);
+
+                if (GetMonData(&gPlayerParty[i], MON_DATA_LEVEL) > highestLevel)
+                {
+                    highestLevel = GetMonData(&gPlayerParty[i], MON_DATA_LEVEL, 0);
+                }
+            }
+
+            medianLevel = medianLevel / pokemonCount;
+        }
+
         for (i = 0; i < gTrainers[trainerNum].partySize; i++)
         {
             u32 personalityValue;
@@ -1051,67 +1089,193 @@ u8 CreateNPCTrainerParty(struct Pokemon *party, u16 trainerNum)
             for (j = 0; gTrainers[trainerNum].trainerName[j] != 0xFF; j++)
                 nameHash += gTrainers[trainerNum].trainerName[j];
 
-            switch (gTrainers[trainerNum].partyFlags)
+            if (Nuzlocke_AreTrainersRandomized() == TRUE)
             {
-            case 0:
-            {
-                const struct TrainerMonNoItemDefaultMoves *partyData = gTrainers[trainerNum].party.NoItemDefaultMoves;
+                u16 species = SPECIES_NONE;
+                u16 level = 0;
+                u16 heldItem = 0;
 
-                for (j = 0; gSpeciesNames[partyData[i].species][j] != 0xFF; j++)
-                    nameHash += gSpeciesNames[partyData[i].species][j];
-                personalityValue += nameHash << 8;
-                fixedIV = partyData[i].iv * 31 / 255;
-                CreateMon(&party[i], partyData[i].species, partyData[i].level, fixedIV, TRUE, personalityValue, 2, 0);
-                break;
-            }
-            case F_TRAINER_PARTY_CUSTOM_MOVESET:
-            {
-                const struct TrainerMonNoItemCustomMoves *partyData = gTrainers[trainerNum].party.NoItemCustomMoves;
-
-                for (j = 0; gSpeciesNames[partyData[i].species][j] != 0xFF; j++)
-                    nameHash += gSpeciesNames[partyData[i].species][j];
-                personalityValue += nameHash << 8;
-                fixedIV = partyData[i].iv * 31 / 255;
-                CreateMon(&party[i], partyData[i].species, partyData[i].level, fixedIV, TRUE, personalityValue, 2, 0);
-
-                for (j = 0; j < 4; j++)
+                switch (gTrainers[trainerNum].partyFlags)
                 {
-                    SetMonData(&party[i], MON_DATA_MOVE1 + j, &partyData[i].moves[j]);
-                    SetMonData(&party[i], MON_DATA_PP1 + j, &gBattleMoves[partyData[i].moves[j]].pp);
+                    case 0:
+                        {
+                            const struct TrainerMonNoItemDefaultMoves *partyData = gTrainers[trainerNum].party.NoItemDefaultMoves;
+
+                            for (j = 0; gSpeciesNames[partyData[i].species][j] != 0xFF; j++)
+                                nameHash += gSpeciesNames[partyData[i].species][j];
+                            personalityValue += nameHash << 8;
+                            fixedIV = partyData[i].iv * 31 / 255;
+                            level = partyData[i].level;
+                            species = partyData[i].species;
+                        }
+                        break;
+
+                    case F_TRAINER_PARTY_CUSTOM_MOVESET:
+                        {
+                            const struct TrainerMonNoItemCustomMoves *partyData = gTrainers[trainerNum].party.NoItemCustomMoves;
+
+                            for (j = 0; gSpeciesNames[partyData[i].species][j] != 0xFF; j++)
+                                nameHash += gSpeciesNames[partyData[i].species][j];
+                            personalityValue += nameHash << 8;
+                            fixedIV = partyData[i].iv * 31 / 255;
+                            level = partyData[i].level;
+                            species = partyData[i].species;
+                        }
+                        break;
+
+                    case F_TRAINER_PARTY_HELD_ITEM:
+                        {
+                            const struct TrainerMonItemDefaultMoves *partyData = gTrainers[trainerNum].party.ItemDefaultMoves;
+
+                            for (j = 0; gSpeciesNames[partyData[i].species][j] != 0xFF; j++)
+                                nameHash += gSpeciesNames[partyData[i].species][j];
+                            personalityValue += nameHash << 8;
+                            fixedIV = partyData[i].iv * 31 / 255;
+                            level = partyData[i].level;
+                            species = partyData[i].species;
+                            heldItem = partyData[i].heldItem;
+                        }
+                        break;
+
+                    case F_TRAINER_PARTY_CUSTOM_MOVESET | F_TRAINER_PARTY_HELD_ITEM:
+                        {
+                            const struct TrainerMonItemCustomMoves *partyData = gTrainers[trainerNum].party.ItemCustomMoves;
+
+                            for (j = 0; gSpeciesNames[partyData[i].species][j] != 0xFF; j++)
+                                nameHash += gSpeciesNames[partyData[i].species][j];
+                            personalityValue += nameHash << 8;
+                            fixedIV = partyData[i].iv * 31 / 255;
+                            level = partyData[i].level;
+                            species = partyData[i].species;
+                            heldItem = partyData[i].heldItem;
+                        }
+                        break;
                 }
-                break;
-            }
-            case F_TRAINER_PARTY_HELD_ITEM:
-            {
-                const struct TrainerMonItemDefaultMoves *partyData = gTrainers[trainerNum].party.ItemDefaultMoves;
+                
+                // generate random mon based on the current one
+                // this is deterministic, the same trainer, with the same seed
+                // will have the same pokemons
+                CreateMon(
+                    &party[i],
+                    Nuzlocke_RandomSpecies(species, i * (trainerNum & 0xFF), &gMapHeader),
+                    level,
+                    fixedIV,
+                    TRUE,
+                    personalityValue,
+                    2,
+                    0
+                );
 
-                for (j = 0; gSpeciesNames[partyData[i].species][j] != 0xFF; j++)
-                    nameHash += gSpeciesNames[partyData[i].species][j];
-                personalityValue += nameHash << 8;
-                fixedIV = partyData[i].iv * 31 / 255;
-                CreateMon(&party[i], partyData[i].species, partyData[i].level, fixedIV, TRUE, personalityValue, 2, 0);
-
-                SetMonData(&party[i], MON_DATA_HELD_ITEM, &partyData[i].heldItem);
-                break;
-            }
-            case F_TRAINER_PARTY_CUSTOM_MOVESET | F_TRAINER_PARTY_HELD_ITEM:
-            {
-                const struct TrainerMonItemCustomMoves *partyData = gTrainers[trainerNum].party.ItemCustomMoves;
-
-                for (j = 0; gSpeciesNames[partyData[i].species][j] != 0xFF; j++)
-                    nameHash += gSpeciesNames[partyData[i].species][j];
-                personalityValue += nameHash << 8;
-                fixedIV = partyData[i].iv * 31 / 255;
-                CreateMon(&party[i], partyData[i].species, partyData[i].level, fixedIV, TRUE, personalityValue, 2, 0);
-
-                SetMonData(&party[i], MON_DATA_HELD_ITEM, &partyData[i].heldItem);
-                for (j = 0; j < 4; j++)
+                // if the pokemon is supossed to held any item
+                // add it now
+                if (heldItem)
                 {
-                    SetMonData(&party[i], MON_DATA_MOVE1 + j, &partyData[i].moves[j]);
-                    SetMonData(&party[i], MON_DATA_PP1 + j, &gBattleMoves[partyData[i].moves[j]].pp);
+                    SetMonData(&party[i], MON_DATA_HELD_ITEM, &heldItem);
                 }
-                break;
             }
+            else
+            {
+                switch (gTrainers[trainerNum].partyFlags)
+                {
+                    case 0:
+                    {
+                        const struct TrainerMonNoItemDefaultMoves *partyData = gTrainers[trainerNum].party.NoItemDefaultMoves;
+
+                        for (j = 0; gSpeciesNames[partyData[i].species][j] != 0xFF; j++)
+                            nameHash += gSpeciesNames[partyData[i].species][j];
+                        personalityValue += nameHash << 8;
+                        fixedIV = partyData[i].iv * 31 / 255;
+                        CreateMon(&party[i], partyData[i].species, partyData[i].level, fixedIV, TRUE, personalityValue, 2, 0);
+                        break;
+                    }
+                    case F_TRAINER_PARTY_CUSTOM_MOVESET:
+                    {
+                        const struct TrainerMonNoItemCustomMoves *partyData = gTrainers[trainerNum].party.NoItemCustomMoves;
+
+                        for (j = 0; gSpeciesNames[partyData[i].species][j] != 0xFF; j++)
+                            nameHash += gSpeciesNames[partyData[i].species][j];
+                        personalityValue += nameHash << 8;
+                        fixedIV = partyData[i].iv * 31 / 255;
+                        CreateMon(&party[i], partyData[i].species, partyData[i].level, fixedIV, TRUE, personalityValue, 2, 0);
+
+                        for (j = 0; j < 4; j++)
+                        {
+                            SetMonData(&party[i], MON_DATA_MOVE1 + j, &partyData[i].moves[j]);
+                            SetMonData(&party[i], MON_DATA_PP1 + j, &gBattleMoves[partyData[i].moves[j]].pp);
+                        }
+                        break;
+                    }
+                    case F_TRAINER_PARTY_HELD_ITEM:
+                    {
+                        const struct TrainerMonItemDefaultMoves *partyData = gTrainers[trainerNum].party.ItemDefaultMoves;
+
+                        for (j = 0; gSpeciesNames[partyData[i].species][j] != 0xFF; j++)
+                            nameHash += gSpeciesNames[partyData[i].species][j];
+                        personalityValue += nameHash << 8;
+                        fixedIV = partyData[i].iv * 31 / 255;
+                        CreateMon(&party[i], partyData[i].species, partyData[i].level, fixedIV, TRUE, personalityValue, 2, 0);
+
+                        SetMonData(&party[i], MON_DATA_HELD_ITEM, &partyData[i].heldItem);
+                        break;
+                    }
+                    case F_TRAINER_PARTY_CUSTOM_MOVESET | F_TRAINER_PARTY_HELD_ITEM:
+                    {
+                        const struct TrainerMonItemCustomMoves *partyData = gTrainers[trainerNum].party.ItemCustomMoves;
+
+                        for (j = 0; gSpeciesNames[partyData[i].species][j] != 0xFF; j++)
+                            nameHash += gSpeciesNames[partyData[i].species][j];
+                        personalityValue += nameHash << 8;
+                        fixedIV = partyData[i].iv * 31 / 255;
+                        CreateMon(&party[i], partyData[i].species, partyData[i].level, fixedIV, TRUE, personalityValue, 2, 0);
+
+                        SetMonData(&party[i], MON_DATA_HELD_ITEM, &partyData[i].heldItem);
+                        for (j = 0; j < 4; j++)
+                        {
+                            SetMonData(&party[i], MON_DATA_MOVE1 + j, &partyData[i].moves[j]);
+                            SetMonData(&party[i], MON_DATA_PP1 + j, &gBattleMoves[partyData[i].moves[j]].pp);
+                        }
+                        break;
+                    }
+                }
+            }
+
+            if (Nuzlocke_AreTrainerAttacksRandomized() == TRUE)
+            {
+                u16 species = GetMonData(&party[i], MON_DATA_SPECIES);
+
+                for(j = 0; j < 4; j ++)
+                {
+                    u16 move = Nuzlocke_RandomAttack(species, i * (trainerNum & 0xFF), j);
+                    SetMonData(&party[i], MON_DATA_MOVE1 + j, &move);
+                    SetMonData(&party[i], MON_DATA_PP1 + j, &gBattleMoves[move].pp);
+                }
+            }
+
+            if (Nuzlocke_ShouldBalanceLevels() == TRUE)
+            {
+                u8 level = GetMonData(&party[i], MON_DATA_LEVEL);
+                u16 species = GetMonData(&party[i], MON_DATA_SPECIES, NULL);
+                u8 newLevel = level;
+                u16 levelingMode = Random() % 5;
+
+                if (levelingMode < 5 && level < medianLevel)
+                {
+                    newLevel = medianLevel + ((Random() % 6) - 3);
+                }
+                else if (level < highestLevel)
+                {
+                    newLevel = highestLevel + ((Random() % 6) - 3);
+                }
+
+                if (newLevel > MAX_LEVEL) newLevel = MAX_LEVEL;
+                if (newLevel < 5) newLevel = 5;
+
+                // set the experience based on the level we're targetting
+                // the re-calculation of stats also calculates the level
+                // based on the exp and the growth curve of the species
+                SetMonData(&party[i], MON_DATA_EXP, &gExperienceTables[gBaseStats[species].growthRate][newLevel]);
+                // recalculate the pokemon stats after applying the target level exp
+                CalculateMonStats(&party[i]);
             }
         }
         gBattleTypeFlags |= gTrainers[trainerNum].doubleBattle;
@@ -6285,6 +6449,7 @@ static void RunTurnActionsFunctions(void)
     if (gBattleOutcome != 0)
         gCurrentActionFuncId = 12;
 
+    // turn action ran, use the actual item, attack, run etc
     gBattleStruct->unk16057 = gCurrentTurnActionNumber;
     gUnknown_081FA640[gCurrentActionFuncId]();
 
@@ -6517,6 +6682,18 @@ static void ReturnFromBattleToOverworld(void)
         UpdateRoamerHPStatus(&gEnemyParty[0]);
         if (gBattleOutcome == BATTLE_WON || gBattleOutcome == BATTLE_CAUGHT)
             SetRoamerInactive();
+    }
+
+    if (gBattleTypeFlags & BATTLE_TYPE_WILD || gBattleTypeFlags & BATTLE_TYPE_ROAMER)
+    {
+        if (Nuzlocke_CaptureMode() == NUZLOCKE_CAPTUREMODE_FIRSTENCOUNTER)
+        {
+            Nuzlocke_CapturedOn(&gMapHeader);
+        }
+        else if (Nuzlocke_CaptureMode() == NUZLOCKE_CAPTUREMODE_FIRSTCAPTURE && gBattleOutcome == BATTLE_CAUGHT)
+        {
+            Nuzlocke_CapturedOn(&gMapHeader);
+        }
     }
 
     m4aSongNumStop(0x5A);

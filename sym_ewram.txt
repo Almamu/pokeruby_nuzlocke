@@ -404,3 +404,5 @@ gUnknown_02039760 = .; /* 2039760 */
     . += 0xC00;
 
 . = ALIGN(4); src/menu_cursor.o(ewram_data);
+
+src/nuzlocke.o(ewram_data);

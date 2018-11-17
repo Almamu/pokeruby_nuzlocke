@@ -14,6 +14,7 @@
 #include "rom_8077ABC.h"
 #include "rom_8094928.h"
 #include "util.h"
+#include "nuzlocke.h"
 
 extern s32 gBattleMoveDamage;
 extern u8 gAbsentBattlerFlags;
@@ -269,7 +270,7 @@ bool8 PokemonUseItemEffects(struct Pokemon *pkmn, u16 item, u8 partyIndex, u8 mo
                         // revive?
                         if (r10 & 0x10)
                         {
-                            if (GetMonData(pkmn, MON_DATA_HP, NULL) != 0)
+                            if (GetMonData(pkmn, MON_DATA_HP, NULL) != 0 || Nuzlocke_IsPokemonInstadead() == TRUE)
                             {
                                 sp24++;
                                 break;
@@ -302,10 +303,10 @@ bool8 PokemonUseItemEffects(struct Pokemon *pkmn, u16 item, u8 partyIndex, u8 mo
                         data = itemEffect[sp24++];
                         switch (data)
                         {
-                        case 0xFF:
+                        case 0xFF: // full revive
                             data = GetMonData(pkmn, MON_DATA_MAX_HP, NULL) - GetMonData(pkmn, MON_DATA_HP, NULL);
                             break;
-                        case 0xFE:
+                        case 0xFE: // normal revive
                             data = GetMonData(pkmn, MON_DATA_MAX_HP, NULL) / 2;
                             if (data == 0)
                                 data = 1;
@@ -314,6 +315,7 @@ bool8 PokemonUseItemEffects(struct Pokemon *pkmn, u16 item, u8 partyIndex, u8 mo
                             data = eStatHp;
                             break;
                         }
+                        // TODO: NUZLOCKE HERE
                         if (GetMonData(pkmn, MON_DATA_MAX_HP, NULL) != GetMonData(pkmn, MON_DATA_HP, NULL))
                         {
                             if (e == 0)

@@ -31,6 +31,7 @@
 #include "task.h"
 #include "trainer_card.h"
 #include "scanline_effect.h"
+#include "nuzlocke.h"
 
 //Menu actions
 enum {
@@ -41,9 +42,10 @@ enum {
     MENU_ACTION_PLAYER,
     MENU_ACTION_SAVE,
     MENU_ACTION_OPTION,
+    MENU_ACTION_NUZLOCKE,
     MENU_ACTION_EXIT,
     MENU_ACTION_RETIRE,
-    MENU_ACTION_PLAYER_LINK
+    MENU_ACTION_PLAYER_LINK,
 };
 
 #if DEBUG
@@ -81,6 +83,7 @@ static u8 StartMenu_PokenavCallback(void);
 static u8 StartMenu_PlayerCallback(void);
 static u8 StartMenu_SaveCallback(void);
 static u8 StartMenu_OptionCallback(void);
+static u8 StartMenu_NuzlockeCallback(void);
 static u8 StartMenu_ExitCallback(void);
 static u8 StartMenu_RetireCallback(void);
 static u8 StartMenu_PlayerLinkCallback(void);
@@ -94,6 +97,7 @@ static const struct MenuAction sStartMenuItems[] =
     { SystemText_Player, StartMenu_PlayerCallback },
     { SystemText_Save, StartMenu_SaveCallback },
     { SystemText_Option, StartMenu_OptionCallback },
+    { SystemText_Nuzlocke, StartMenu_NuzlockeCallback },
     { SystemText_Exit, StartMenu_ExitCallback },
     { SystemText_Retire, StartMenu_RetireCallback },
     { SystemText_Player, StartMenu_PlayerLinkCallback },
@@ -272,6 +276,7 @@ static void BuildStartMenuActions_Normal(void)
     AddStartMenuAction(MENU_ACTION_PLAYER);
     AddStartMenuAction(MENU_ACTION_SAVE);
     AddStartMenuAction(MENU_ACTION_OPTION);
+    AddStartMenuAction(MENU_ACTION_NUZLOCKE);
     AddStartMenuAction(MENU_ACTION_EXIT);
 }
 
@@ -283,6 +288,7 @@ static void BuildStartMenuActions_SafariZone(void)
     AddStartMenuAction(MENU_ACTION_BAG);
     AddStartMenuAction(MENU_ACTION_PLAYER);
     AddStartMenuAction(MENU_ACTION_OPTION);
+    AddStartMenuAction(MENU_ACTION_NUZLOCKE);
     AddStartMenuAction(MENU_ACTION_EXIT);
 }
 
@@ -294,6 +300,7 @@ static void BuildStartMenuActions_Link(void)
         AddStartMenuAction(MENU_ACTION_POKENAV);
     AddStartMenuAction(MENU_ACTION_PLAYER_LINK);
     AddStartMenuAction(MENU_ACTION_OPTION);
+    AddStartMenuAction(MENU_ACTION_NUZLOCKE);
     AddStartMenuAction(MENU_ACTION_EXIT);
 }
 
@@ -312,7 +319,7 @@ static bool32 PrintStartMenuItemsMultistep(s16 *index, u32 n)
 
     do
     {
-        Menu_PrintText(sStartMenuItems[sCurrentStartMenuActions[_index]].text, 23, 2 + _index * 2);
+        Menu_PrintText(sStartMenuItems[sCurrentStartMenuActions[_index]].text, 23, 1 + _index * 2);
         _index++;
         if (_index >= sNumStartMenuActions)
         {
@@ -334,9 +341,14 @@ static bool32 InitStartMenuMultistep(s16 *step, s16 *index)
         (*step)++;
         break;
     case 2:
-        Menu_DrawStdWindowFrame(22, 0, 29, sNumStartMenuActions * 2 + 3);
-        *index = 0;
-        (*step)++;
+        {
+            u8 length = sNumStartMenuActions * 2 + 3;
+            if (length > 19) length = 19;
+
+            Menu_DrawStdWindowFrame(22, 0, 29, length);
+            *index = 0;
+            (*step)++;
+        }
         break;
     case 3:
         if (GetSafariZoneFlag())
@@ -351,7 +363,7 @@ static bool32 InitStartMenuMultistep(s16 *step, s16 *index)
         (*step)++;
         break;
     case 5:
-        sStartMenuCursorPos = InitMenu(0, 0x17, 2, sNumStartMenuActions, sStartMenuCursorPos, 6);
+        sStartMenuCursorPos = InitMenu(0, 0x17, 1, sNumStartMenuActions, sStartMenuCursorPos, 6);
         return TRUE;
     }
     return FALSE;
@@ -526,6 +538,17 @@ static u8 StartMenu_OptionCallback(void)
         SetMainCallback2(CB2_InitOptionMenu);
         gMain.savedCallback = c2_exit_to_overworld_1_sub_8080DEC;
         return 1;
+    }
+    return 0;
+}
+
+static u8 StartMenu_NuzlockeCallback(void)
+{
+    if (!gPaletteFade.active)
+    {
+        PlayRainSoundEffect();
+        SetMainCallback2(CB2_InitNuzlockeMenu);
+        gMain.savedCallback = c2_exit_to_overworld_1_sub_8080DEC;
     }
     return 0;
 }

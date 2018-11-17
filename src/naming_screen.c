@@ -19,6 +19,7 @@
 #include "trig.h"
 #include "util.h"
 #include "ewram.h"
+#include "nuzlocke.h"
 
 #ifdef ENGLISH
 #define COLUMN_COUNT 9
@@ -589,7 +590,12 @@ static bool8 KeyboardKeyHandler_OK(u8 event)
 {
     sub_80B6460(2, 1, 0);
     if (event == KBEVENT_PRESSED_A)
-    {
+    {    
+        if (Nuzlocke_IsForcedToNickname() == TRUE && namingScreenDataPtr->textBuffer[0] == EOS)
+        {
+            return FALSE;
+        }
+
         PlaySE(SE_SELECT);
         namingScreenDataPtr->state = MAIN_STATE_6;
         return TRUE;

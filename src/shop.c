@@ -27,6 +27,7 @@
 #include "decoration_inventory.h"
 #include "field_camera.h"
 #include "ewram.h"
+#include "nuzlocke.h"
 
 extern bool8 SellMenu_QuantityRoller(u8, u8);
 
@@ -89,6 +90,7 @@ static const struct YesNoFuncTable sShopPurchaseYesNoFuncs[] =
 
 static u8 CreateShopMenu(u8 martType)
 {
+    // TODO: MART_TYPE_0 is normal mart, forbid only this type
     ScriptContext2_Enable();
     gMartInfo.martType = martType;
     gMartInfo.cursor = 0;
@@ -132,6 +134,12 @@ static void SetShopItemsForSale(const u16 *items)
 static void Task_DoBuySellMenu(u8 taskId)
 {
     const u8 taskIdConst = taskId; // why is a local const needed to match?
+
+    if (gMartInfo.martType == MART_TYPE_0 && !Nuzlocke_IsBuyingItemsAllowed())
+    {
+        PlaySE(SE_SELECT);
+        Task_HandleShopMenuQuit(taskIdConst);
+    }
 
     if (gMain.newAndRepeatedKeys & DPAD_UP)
     {

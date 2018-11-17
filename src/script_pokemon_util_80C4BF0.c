@@ -23,6 +23,7 @@
 #include "constants/species.h"
 #include "task.h"
 #include "ewram.h"
+#include "nuzlocke.h"
 
 extern void sub_80C4674();
 extern void sub_80C4698(u8 *, u8);
@@ -382,6 +383,9 @@ void ScrSpecial_HealPlayerParty(void)
     for(i = 0; i < gPlayerPartyCount; i++)
     {
         u16 maxHP = GetMonData(&gPlayerParty[i], MON_DATA_MAX_HP);
+        u16 currentHP = GetMonData(&gPlayerParty[i], MON_DATA_HP);
+        if (currentHP == 0 && Nuzlocke_IsPokemonInstadead() == TRUE) continue;
+
         arg[0] = maxHP;
         arg[1] = maxHP >> 8;
         SetMonData(&gPlayerParty[i], MON_DATA_HP, arg);
@@ -416,6 +420,19 @@ u8 ScriptGiveMon(u16 species, u8 level, u16 item, u32 unused1, u32 unused2, u8 u
     SetMonData(&mon, MON_DATA_HELD_ITEM, heldItem);
     sentToPc = GiveMonToPlayer(&mon);
     nationalDexNum = SpeciesToNationalPokedexNum(species);
+
+    if (Nuzlocke_AreWildAttacksRandomized() == TRUE)
+    {
+        u8 j = 0;
+
+        for(j = 0; j < 4; j ++)
+        {
+            u16 move = Nuzlocke_RandomAttack(species, Random(), Random());
+
+            SetMonData(&mon, MON_DATA_MOVE1 + j, &move);
+            SetMonData(&mon, MON_DATA_PP1 + j, &gBattleMoves[move].pp);
+        }
+    }
 
     switch(sentToPc)
     {

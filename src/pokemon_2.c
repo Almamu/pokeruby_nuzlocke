@@ -17,6 +17,7 @@
 #include "trainer.h"
 #include "util.h"
 #include "ewram.h"
+#include "nuzlocke.h"
 
 extern u8 gPlayerPartyCount;
 extern u8 gEnemyPartyCount;
@@ -125,6 +126,11 @@ u8 GetBoxMonGender(struct BoxPokemon *boxMon)
     case MON_FEMALE:
     case MON_GENDERLESS:
         return gBaseStats[species].genderRatio;
+    }
+
+    if (Nuzlocke_AreGendersRandomized() == TRUE)
+    {
+        return Nuzlocke_RandomGender(species, personality);
     }
 
     if (gBaseStats[species].genderRatio > (personality & 0xFF))
