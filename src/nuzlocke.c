@@ -12,6 +12,8 @@
 #include "constants/species.h"
 #include "constants/moves.h"
 #include "data2.h"
+#include "palette.h"
+#include "rtc.h"
 
 // on global.h:822
 /*
@@ -132,6 +134,7 @@ const u8* nuzlockeCaptureValues[] =
 EWRAM_DATA static u16 randomizedStarters[] = {SPECIES_NONE, SPECIES_NONE, SPECIES_NONE};
 EWRAM_DATA static u32 gNuzlockeRandomSeed = 0;
 EWRAM_DATA static u16 data[18] = {0}; // TODO: BETTER STORAGE FOR THE SETTINGS, WE SHOULDN'T BE USING EWRAM WHEN WE HAVE 32 BYTES ALREADY RESERVED AT THE TASK FOR THIS KIND OF DATA
+EWRAM_DATA static u16 sPaletteDataBuffer[0x400] = {0};
 
 extern const u16 gUnknown_0839F5FC[];
 // note: this is only used in the Japanese release
@@ -749,4 +752,57 @@ void NuzlockeGenerateStarters()
         randomizedStarters [found++] = value;
     }
     while (found < 3);
+}
+
+void Nuzlocke_TintPalette (u16* paletteBuffer, u16 blendColor, u8 coeff)
+{
+    u16 index = 0;
+
+    // compare the whole palette and fade the new colors
+    // then store the new faded color on our palette buffer
+    for (index = 0; index < PLTT_SIZE; index ++)
+    {
+        struct PlttData *data1 = (struct PlttData *)&paletteBuffer[index];
+        s8 r = data1->r;
+        s8 g = data1->g;
+        s8 b = data1->b;
+        struct PlttData *data2 = (struct PlttData *)&blendColor;
+        paletteBuffer[index] = ((r + (((data2->r - r) * coeff) >> 4)) << 0)
+                             | ((g + (((data2->g - g) * coeff) >> 4)) << 5)
+                             | ((b + (((data2->b - b) * coeff) >> 4)) << 10);
+    }
+}
+
+void Nuzlocke_CheckPalettes(void* palette)
+{
+    // calculate the RTC to get updated time
+    RtcCalcLocalTime ();
+
+    // Copy palette in use to manipulate it
+    CpuCopy16(palette, sPaletteDataBuffer, PLTT_SIZE);
+
+    if (true)
+    {
+        if (gLocalTime.hours > 8 && gLocalTime.hours < 14)
+        {
+            Nuzlocke_TintPalette (sPaletteDataBuffer, RGB(8, 22, 30), 4);
+        }
+        else if (gLocalTime.hours >= 14 && gLocalTime.hours < 18)
+        {
+            //Nuzlocke_TintPalette (sPaletteDataUnfaded, RGB());
+        }
+        else if (gLocalTime.hours >= 18 && gLocalTime.hours < 21)
+        {
+            Nuzlocke_TintPalette (sPaletteDataBuffer, RGB(30, 26, 8), 2);
+        }
+        else
+        {
+            Nuzlocke_TintPalette (sPaletteDataBuffer, RGB(3, 6, 14), 8);
+        }
+    }
+
+    // this should have been called from the palette copy function
+    // hence the game doesnt realize we are modifying the palette
+    DmaCopy16(3, sPaletteDataBuffer, PLTT, PLTT_SIZE);
+
 }

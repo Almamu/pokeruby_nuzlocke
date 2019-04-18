@@ -14,6 +14,7 @@
 #include "siirtc.h"
 #include "sound.h"
 #include "scanline_effect.h"
+#include "nuzlocke.h"
 
 extern struct SoundInfo gSoundInfo;
 extern u32 IntrMain[];

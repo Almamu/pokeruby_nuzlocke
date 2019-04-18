@@ -193,6 +193,22 @@ static const struct OamData gOamData_8393F0C =
     .shape = 1,
     .x = 0,
     .matrixNum = 0,
+    .size = 2,
+    .tileNum = 0,
+    .priority = 0,
+    .paletteNum = 0,
+    .affineParam = 0,
+};
+static const struct OamData gOamData_Copyright =
+{
+    .y = 160,
+    .affineMode = 0,
+    .objMode = 0,
+    .mosaic = 0,
+    .bpp = 0,
+    .shape = 1,
+    .x = 0,
+    .matrixNum = 0,
     .size = 1,
     .tileNum = 0,
     .priority = 0,
@@ -206,37 +222,38 @@ static const union AnimCmd gSpriteAnim_8393F14[] =
 };
 static const union AnimCmd gSpriteAnim_8393F1C[] =
 {
-    ANIMCMD_FRAME(4, 4),
+    ANIMCMD_FRAME(8, 4),
     ANIMCMD_END,
 };
 static const union AnimCmd gSpriteAnim_8393F24[] =
 {
-    ANIMCMD_FRAME(8, 4),
-    ANIMCMD_END,
-};
-static const union AnimCmd gSpriteAnim_8393F2C[] =
-{
-    ANIMCMD_FRAME(12, 4),
-    ANIMCMD_END,
-};
-static const union AnimCmd gSpriteAnim_8393F34[] =
-{
     ANIMCMD_FRAME(16, 4),
     ANIMCMD_END,
 };
-static const union AnimCmd gSpriteAnim_8393F3C[] =
-{
-    ANIMCMD_FRAME(20, 4),
-    ANIMCMD_END,
-};
-static const union AnimCmd gSpriteAnim_8393F44[] =
+// up to this is the animations for the press start text
+static const union AnimCmd gSpriteAnim_8393F2C[] =
 {
     ANIMCMD_FRAME(24, 4),
     ANIMCMD_END,
 };
-static const union AnimCmd gSpriteAnim_8393F4C[] =
+static const union AnimCmd gSpriteAnim_8393F34[] =
 {
     ANIMCMD_FRAME(28, 4),
+    ANIMCMD_END,
+};
+static const union AnimCmd gSpriteAnim_8393F3C[] =
+{
+    ANIMCMD_FRAME(32, 4),
+    ANIMCMD_END,
+};
+static const union AnimCmd gSpriteAnim_8393F44[] =
+{
+    ANIMCMD_FRAME(36, 4),
+    ANIMCMD_END,
+};
+static const union AnimCmd gSpriteAnim_8393F4C[] =
+{
+    ANIMCMD_FRAME(40, 4),
     ANIMCMD_END,
 };
 #if GERMAN
@@ -266,11 +283,21 @@ static const union AnimCmd *const sStartCopyrightBannerAnimTable[] =
     gSpriteAnim_839F744,
 #endif
 };
-static const struct SpriteTemplate sStartCopyrightBannerSpriteTemplate =
+static const struct SpriteTemplate sStartBannerSpriteTemplate =
 {
     .tileTag = 1001,
     .paletteTag = 1001,
     .oam = &gOamData_8393F0C,
+    .anims = sStartCopyrightBannerAnimTable,
+    .images = NULL,
+    .affineAnims = gDummySpriteAffineAnimTable,
+    .callback = SpriteCallback_PressStartCopyrightBanner,
+};
+static const struct SpriteTemplate sStartCopyrightBannerSpriteTemplate =
+{
+    .tileTag = 1001,
+    .paletteTag = 1001,
+    .oam = &gOamData_Copyright,
     .anims = sStartCopyrightBannerAnimTable,
     .images = NULL,
     .affineAnims = gDummySpriteAffineAnimTable,
@@ -431,7 +458,7 @@ static void CreatePressStartBanner(s16 x, s16 y)
     x -= 32;
     for (i = 0; i < 3; i++, x += 32)
     {
-        spriteId = CreateSprite(&sStartCopyrightBannerSpriteTemplate, x, y, 0);
+        spriteId = CreateSprite(&sStartBannerSpriteTemplate, x, y, 0);
         StartSpriteAnim(&gSprites[spriteId], i);
         gSprites[spriteId].data[0] = 1;
     }

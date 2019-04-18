@@ -1,4 +1,8 @@
-# Pokémon Ruby and Sapphire [![Build Status][travis-badge]][travis]
+# What is this?
+This is a modification of the [**PoKéMoN Ruby and Sapphire**][pokeruby] disassembly to implement various common Nuzlocke rules on top of the game to allow for a enforced nuzlocke experience, without the need of remembering the whole ruleset you started the game with a month ago.
+
+# ORIGINAL README
+# Pokémon Ruby and Sapphire
 
 This is a disassembly of Pokémon Ruby and Sapphire.
 
@@ -30,7 +34,6 @@ To set up the repository, see [INSTALL.md](INSTALL.md).
 [poketcg]: https://github.com/pret/poketcg
 [pokefirered]: https://github.com/pret/pokefirered
 [pokeemerald]: https://github.com/pret/pokeemerald
+[pokeruby]: https://github.com/pret/pokeruby
 [Discord]: https://discord.gg/6EuWgX9
 [irc]: https://kiwiirc.com/client/irc.freenode.net/?#pret
-[travis]: https://travis-ci.org/pret/pokeruby
-[travis-badge]: https://travis-ci.org/pret/pokeruby.svg?branch=master

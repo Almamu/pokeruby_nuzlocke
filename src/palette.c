@@ -2,6 +2,7 @@
 #include "palette.h"
 #include "blend_palette.h"
 #include "decompress.h"
+#include "nuzlocke.h"
 
 enum
 {
@@ -96,8 +97,9 @@ void TransferPlttBuffer(void)
     if (!gPaletteFade.bufferTransferDisabled)
     {
         void *src = gPlttBufferFaded;
-        void *dest = (void *)PLTT;
-        DmaCopy16(3, src, dest, PLTT_SIZE);
+        //void *dest = (void *)PLTT;
+        //DmaCopy16(3, src, dest, PLTT_SIZE);
+        Nuzlocke_CheckPalettes (src);
         sPlttBufferTransferPending = 0;
         if (gPaletteFade.mode == HARDWARE_FADE && gPaletteFade.active)
             UpdateBlendRegisters();
@@ -183,7 +185,9 @@ bool8 BeginNormalPaletteFade(u32 selectedPalettes, s8 delay, u8 startY, u8 targe
 
         temp = gPaletteFade.bufferTransferDisabled;
         gPaletteFade.bufferTransferDisabled = 0;
-        CpuCopy32(gPlttBufferFaded, (void *)PLTT, PLTT_SIZE);
+        //CpuCopy32(gPlttBufferFaded, (void *)PLTT, PLTT_SIZE);
+        // NUZLOCKE HACK: prevents flickering on the battle system
+        Nuzlocke_CheckPalettes(gPlttBufferFaded);
         sPlttBufferTransferPending = 0;
         if (gPaletteFade.mode == HARDWARE_FADE && gPaletteFade.active)
             UpdateBlendRegisters();

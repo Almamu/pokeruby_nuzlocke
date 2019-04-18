@@ -76,6 +76,7 @@ u8 Nuzlocke_RandomGender(u16 species, u16 personality);
 u8 Nuzlocke_CaptureMode();
 bool16 Nuzlocke_SpecificStarter();
 u16 Nuzlocke_GetStarterMon(u16);
+void Nuzlocke_CheckPalettes(void*);
 
 void CB2_InitNuzlockeMenu(void);
 
