@@ -781,24 +781,21 @@ void Nuzlocke_CheckPalettes(void* palette)
     // Copy palette in use to manipulate it
     CpuCopy16(palette, sPaletteDataBuffer, PLTT_SIZE);
 
-    if (true)
+    if (gLocalTime.hours > 8 && gLocalTime.hours < 14)
     {
-        if (gLocalTime.hours > 8 && gLocalTime.hours < 14)
-        {
-            Nuzlocke_TintPalette (sPaletteDataBuffer, RGB(8, 22, 30), 4);
-        }
-        else if (gLocalTime.hours >= 14 && gLocalTime.hours < 18)
-        {
-            //Nuzlocke_TintPalette (sPaletteDataUnfaded, RGB());
-        }
-        else if (gLocalTime.hours >= 18 && gLocalTime.hours < 21)
-        {
-            Nuzlocke_TintPalette (sPaletteDataBuffer, RGB(30, 26, 8), 2);
-        }
-        else
-        {
-            Nuzlocke_TintPalette (sPaletteDataBuffer, RGB(3, 6, 14), 8);
-        }
+        Nuzlocke_TintPalette (sPaletteDataBuffer, RGB(8, 22, 30), 4);
+    }
+    else if (gLocalTime.hours >= 14 && gLocalTime.hours < 18)
+    {
+        //Nuzlocke_TintPalette (sPaletteDataUnfaded, RGB());
+    }
+    else if (gLocalTime.hours >= 18 && gLocalTime.hours < 21)
+    {
+        Nuzlocke_TintPalette (sPaletteDataBuffer, RGB(30, 26, 8), 2);
+    }
+    else
+    {
+        Nuzlocke_TintPalette (sPaletteDataBuffer, RGB(3, 6, 14), 8);
     }
 
     // this should have been called from the palette copy function
